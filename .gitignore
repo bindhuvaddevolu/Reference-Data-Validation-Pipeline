@@ -1,0 +1,39 @@
+
+# Python cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# SQLite database and backups
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*_backup*.db
+
+# Generated large input data
+data/input/large_incoming_100000.csv
+
+# Generated output files
+data/output/transformed_data.csv
+
+# Runtime logs
+logs/*.log
+
+# Environment and secrets
+.env
+.env.*
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db

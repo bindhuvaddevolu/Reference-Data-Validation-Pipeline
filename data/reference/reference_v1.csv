@@ -1,0 +1,6 @@
+code,description,valid_from,valid_to,status
+HYD,Hyderabad,2025-01-01,9999-12-31,ACTIVE
+BLR,Bengaluru,2025-01-01,9999-12-31,ACTIVE
+CHN,Chennai,2025-01-01,9999-12-31,ACTIVE
+OLD,Old Region,2020-01-01,2025-12-31,DEPRECATED
+FUT,Future Region,2027-01-01,9999-12-31,ACTIVE
