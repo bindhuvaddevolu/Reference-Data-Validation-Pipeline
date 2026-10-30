@@ -93,7 +93,7 @@ Reference v2 introduces the PNQ code, resulting in one additional accepted recor
 Clone the repository:
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/bindhuvaddevolu/Reference-Data-Validation-Pipeline.git
 cd Reference-Data-Validation-Pipeline
 ```
 
