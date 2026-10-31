@@ -63,7 +63,7 @@ The dataset generator uses a fixed random seed (42) and supports configurable re
 
 ## 4. Automated Testing
 
-The project includes 17 automated tests using Pytest.
+The project includes **18 automated tests** using Pytest.
 
 Test coverage includes:
 
@@ -84,10 +84,11 @@ Test coverage includes:
 - Missing source column detection
 - Unexpected source column detection
 - Malformed CSV detection
+- Out-of-order event dates
 
 ### Test Result
 
-**17 tests passed successfully.**
+**18 tests passed successfully.**
 
 Command used:
 
@@ -131,16 +132,4 @@ The SQLite database was verified using the SQL queries available in `docs/RECONC
 
 ### Observation
 
-Accepted records retain the run ID of the execution that first inserted them. During subsequent idempotent executions, existing accepted records are not inserted again.
-
-Pipeline execution counts are maintained separately in `pipeline_runs`.
-
-Rejection audit records are maintained per run, so rejection counts across multiple executions may accumulate.
-
-## 7. Conclusion
-
-The project demonstrates a modular reference data validation pipeline with:
-
-- Version-aware reference data validation.
-- Schema and business rule validation.
-- Accepted
+Accepted records retain the run ID of the execution that first inserted
