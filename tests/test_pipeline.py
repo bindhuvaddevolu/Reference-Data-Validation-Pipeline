@@ -457,3 +457,26 @@ def test_malformed_csv(tmp_path):
 
     with pytest.raises(pd.errors.ParserError):
         read_csv_with_schema(csv_file, SOURCE_COLUMNS)
+
+# TEST 18: Out-of-order event dates should be validated independently
+def test_out_of_order_event_dates(reference_df):
+
+    source_df = make_source([
+        ["E018", "C018", "HYD", "2026-10-22"],
+        ["E019", "C019", "HYD", "2026-10-20"],
+        ["E020", "C020", "HYD", "2026-10-21"],
+    ])
+
+    accepted, rejected = validate_data(
+        source_df,
+        reference_df
+    )
+
+    assert len(accepted) == 3
+    assert len(rejected) == 0
+
+    assert accepted["event_id"].tolist() == [
+        "E018",
+        "E019",
+        "E020"
+    ]
