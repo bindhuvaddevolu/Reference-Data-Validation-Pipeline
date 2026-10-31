@@ -2,74 +2,95 @@
 
 ## 1. Purpose
 
-This document describes how AI assistance was used during the development of the Reference Data Validation Pipeline.
+This document explains how AI tools supported the development of the Reference Data Validation Pipeline.
 
-AI tools were used as development assistants for understanding requirements, exploring implementation approaches, debugging, test design, performance optimization, and documentation.
+AI assistance was used for understanding technical concepts, exploring implementation approaches, debugging, designing tests, performance analysis, and improving documentation.
 
-The developer reviewed the suggestions, tested the implementation, and made the final technical decisions.
+All final implementation decisions and project verification remain the developer's responsibility.
 
 ## 2. AI Tools Used
 
-- ChatGPT – Used for technical guidance, Python implementation assistance, debugging, test-case design, performance analysis, and documentation support.
+### ChatGPT
+Used as the primary AI assistant for:
+- Understanding the pipeline requirements.
+- Python and Pandas implementation guidance.
+- SQLite database and idempotency concepts.
+- Debugging and test-case development.
+- Performance optimization guidance.
+- README and technical documentation improvements.
 
-## 3. Areas Where AI Assistance Was Used
+### Claude AI
+Used occasionally as a secondary assistant for additional technical suggestions and alternative implementation approaches.
 
-### 3.1 Project Understanding and Architecture
-- Understanding the reference data validation workflow.
+Specific Claude prompts and suggestions should be included in the separate prompt history where available.
+
+## 3. Areas of AI Assistance
+
+### 3.1 Architecture and Design
 - Breaking the pipeline into extraction, validation, transformation, and loading stages.
-- Exploring how reference data versions affect validation results.
+- Understanding versioned reference data.
+- Exploring database audit and run-tracking approaches.
 
 ### 3.2 Python Development
-- Exploring Python and Pandas implementation approaches.
-- Developing and reviewing data validation and transformation logic.
-- Understanding SQLite database operations and transaction handling.
-- Reviewing error-handling and audit-tracking approaches.
+- Reviewing Pandas data validation approaches.
+- Understanding SQLite transactions and database constraints.
+- Exploring error handling and duplicate detection.
 
-### 3.3 Testing and Reliability
-- Designing Pytest test cases for validation rules.
+### 3.3 Testing
+- Designing Pytest test cases.
 - Testing missing fields, invalid dates, unknown codes, and duplicate records.
-- Testing database idempotency and retry behavior.
-- Reviewing failure scenarios and expected pipeline outcomes.
+- Testing idempotency and retry behaviour.
+- Adding an out-of-order event-date test.
 
-### 3.4 Performance Optimization
-- Exploring efficient Pandas iteration techniques, including `itertuples()`.
-- Identifying potential performance bottlenecks.
-- Reviewing benchmark results for a 100,000-record dataset.
+### 3.4 Performance
+- Exploring efficient Pandas iteration using `itertuples()`.
+- Generating reproducible 100,000-record datasets.
+- Reviewing extraction, validation, and transformation timings.
 
 ### 3.5 Documentation
-- Preparing project architecture and setup documentation.
-- Explaining execution instructions and validation rules.
-- Documenting benchmark results and reference-version comparisons.
+- Improving README setup instructions.
+- Preparing the data dictionary and design decisions.
+- Documenting reference-version comparisons and SQL reconciliation.
 
-## 4. Representative AI Prompt Topics
+## 4. Developer's Personal Review and Contributions
 
-The following are paraphrased representative topics of AI assistance, not a verbatim transcript of every interaction:
+The developer reviewed the AI suggestions and performed implementation and verification activities.
 
-1. How can a CSV-based reference data validation pipeline be structured?
-2. How can incoming records be validated against versioned reference data?
-3. How can original source row numbers be preserved throughout processing?
-4. How can idempotent loading be implemented using SQLite?
-5. How can retry behavior and audit history be tested using Pytest?
-6. How can Pandas validation performance be improved for 100,000 records?
-7. How should pipeline architecture, execution instructions, and benchmark results be documented?
+Examples of work performed:
 
-## 5. Human Review and Responsibility
+1. Added an automated test for out-of-order event dates and verified that all three records were processed independently.
+2. Updated the synthetic data generator to use a fixed random seed and generate different data-quality scenarios.
+3. Reviewed duplicate event ID handling and validation outcomes.
+4. Executed the pipeline with reference versions v1 and v2 and checked accepted and rejected record counts.
+5. Re-executed the v2 pipeline to verify that accepted records were not inserted again.
+6. Ran the automated test suite and verified that all 18 tests passed.
+7. Checked the 100,000-record dataset generation and benchmark results.
+8. Reviewed SQLite reconciliation results and GitHub synchronization.
 
-AI-generated suggestions and implementation guidance were reviewed and adapted during development.
+The developer remains responsible for reviewing the implementation, understanding its limitations, and explaining the submitted code.
 
-The developer was responsible for:
-- Reviewing the implementation and business validation rules.
-- Running the pipeline and automated tests.
-- Checking validation results and database behavior.
-- Reviewing performance benchmark results.
-- Making final implementation and design decisions.
+## 5. Limitations and Open Improvements
 
-The developer is responsible for understanding and explaining the submitted code.
+The project implements the core reference data validation workflow. However, some areas can be extended in future versions:
 
-## 6. Confidentiality
+- The current implementation uses CSV files as the input data source.
+- SQLite is used for local database storage; a production deployment could use a scalable database.
+- Support for multiple validity periods for the same reference code can be extended.
+- Distributed processing and large-scale orchestration are outside the current project scope.
+- Additional monitoring and alerting capabilities can be introduced for production use.
 
-This document does not reproduce confidential assessment instructions, the original challenge statement, or other restricted assessment material.
+These are potential future enhancements rather than failures of the implemented pipeline.
 
-## 7. Disclosure
+## 6. Prompt History
 
-AI assistance was used as a supporting development resource. The submitted implementation, test results, and documentation were reviewed before submission. This document describes representative assistance areas and is not a complete verbatim AI conversation history.
+A separate file, `prompt_history.md`, is intended to contain the actual prompts submitted to ChatGPT and Claude AI.
+
+This document is not a substitute for the complete prompt history. Any prompts that cannot be recovered must be identified honestly rather than reconstructed or presented as verbatim.
+
+## 7. Confidentiality
+
+Confidential assessment instructions, the original challenge statement, and restricted assessment material are not reproduced in this documentation.
+
+## 8. Disclosure
+
+AI tools were used as supporting development resources. The developer reviewed, tested, and adapted the suggestions used in the project and is responsible for the final submitted implementation.
