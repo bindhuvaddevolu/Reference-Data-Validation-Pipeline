@@ -1,4 +1,4 @@
-
+import hashlib
 import sqlite3
 
 from datetime import datetime, timezone
@@ -86,6 +86,40 @@ def create_tables(connection):
             ADD COLUMN reference_file TEXT
         """)
 
+    # 5. Backward-compatible rejected-record idempotency migration.
+    rejected_columns = {
+        row[1]
+        for row in cursor.execute(
+            "PRAGMA table_info(rejected_records)"
+        ).fetchall()
+    }
+
+    if "source_file_hash" not in rejected_columns:
+        cursor.execute("""
+            ALTER TABLE rejected_records
+            ADD COLUMN source_file_hash TEXT
+        """)
+
+    if "reference_version" not in rejected_columns:
+        cursor.execute("""
+            ALTER TABLE rejected_records
+            ADD COLUMN reference_version TEXT
+        """)
+
+    # Legacy rows keep NULL hashes and remain preserved.
+    # New rows are unique per file content, source row and reference version.
+    cursor.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        uq_rejected_source_row_version
+        ON rejected_records (
+            source_file_hash,
+            source_row_number,
+            reference_version
+        )
+        WHERE source_file_hash IS NOT NULL
+          AND reference_version IS NOT NULL
+    """)
+
     connection.commit()
 
 
@@ -99,7 +133,8 @@ def record_pipeline_failure(
     accepted_count=0,
     rejected_count=0,
     reference_version=None,
-    reference_file=None
+    reference_file=None,
+    source_file_hash=None
 ):
     """Record a failed pipeline execution independently."""
 
@@ -168,7 +203,8 @@ def load_data(
     input_count,
     started_at=None,
     reference_version=None,
-    reference_file=None
+    reference_file=None,
+    source_file_hash=None
 ):
     """
     Load accepted and rejected records into SQLite.
@@ -177,7 +213,8 @@ def load_data(
         Idempotent using event_id + reference_version.
 
     Rejected records:
-        Tracked using run_id + original source_row_number.
+        Idempotent using source_file_hash + source_row_number
+        + reference_version. run_id remains execution audit metadata.
 
     Pipeline audit:
         Stores source file, reference version and reference filename.
@@ -197,6 +234,14 @@ def load_data(
 
     accepted_inserted = 0
     rejected_inserted = 0
+
+    # Direct callers that do not provide a content hash get a stable
+    # fallback based on the source filename. The main pipeline passes
+    # the SHA-256 hash of the actual input file contents.
+    if source_file_hash is None:
+        source_file_hash = hashlib.sha256(
+            str(source_file).encode("utf-8")
+        ).hexdigest()
 
     try:
         create_tables(connection)
@@ -276,9 +321,11 @@ def load_data(
                     event_date,
                     reject_reason,
                     source_file,
-                    rejected_at
+                    rejected_at,
+                    source_file_hash,
+                    reference_version
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 run_id,
                 source_row_number,
@@ -288,7 +335,9 @@ def load_data(
                 row.get("event_date"),
                 row.get("reject_reason"),
                 source_file,
-                rejected_at
+                rejected_at,
+                source_file_hash,
+                reference_version
             ))
 
             rejected_inserted += cursor.rowcount

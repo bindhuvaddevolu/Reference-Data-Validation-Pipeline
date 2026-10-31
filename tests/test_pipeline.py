@@ -288,7 +288,7 @@ def test_source_row_numbers(reference_df):
     assert rejected["source_row_number"].tolist() == [2]
 
 
-# TEST 13: Retry with a new run ID should preserve rejection history
+# TEST 13: Same source and reference version should not duplicate rejects on retry
 def test_retry_with_new_run_id(reference_df, tmp_path):
 
     source_df = make_source([
@@ -337,9 +337,10 @@ def test_retry_with_new_run_id(reference_df, tmp_path):
     assert first_result["accepted_inserted"] == 1
     assert second_result["accepted_inserted"] == 0
 
-    # Rejected record should be audited for each run
+    # The rejected source row should be stored only once for the
+    # same source content and reference version, even with a new run ID.
     assert first_result["rejected_inserted"] == 1
-    assert second_result["rejected_inserted"] == 1
+    assert second_result["rejected_inserted"] == 0
 
     connection = sqlite3.connect(database_path)
 
@@ -351,10 +352,16 @@ def test_retry_with_new_run_id(reference_df, tmp_path):
         "SELECT COUNT(*) FROM rejected_records"
     ).fetchone()[0]
 
+    audit_run_count = connection.execute(
+        "SELECT COUNT(*) FROM pipeline_runs"
+    ).fetchone()[0]
+
     connection.close()
 
     assert accepted_count == 1
-    assert rejected_count == 2
+    assert rejected_count == 1
+    # Both executions remain visible in the run audit history.
+    assert audit_run_count == 2
 
 
 # TEST 14: Reference version should be stored in audit table

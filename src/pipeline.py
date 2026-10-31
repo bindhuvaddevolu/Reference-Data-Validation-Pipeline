@@ -1,5 +1,5 @@
-
 import argparse
+import hashlib
 import logging
 import uuid
 
@@ -84,8 +84,15 @@ def run_pipeline(reference_version="v2"):
 
         input_count = len(source_df)
 
+        # Hash the actual source file contents. This makes reject
+        # deduplication stable across reruns, while detecting file changes.
+        source_file_hash = hashlib.sha256(
+            INPUT_FILE.read_bytes()
+        ).hexdigest()
+
         logger.info("Input records: %s", input_count)
         logger.info("Reference records: %s", len(reference_df))
+        logger.info("Source file SHA-256: %s", source_file_hash)
 
         # STEP 2: VALIDATE
         logger.info("Step 2: Validating data")
@@ -142,7 +149,8 @@ def run_pipeline(reference_version="v2"):
             input_count=input_count,
             started_at=start_time,
             reference_version=reference_version,
-            reference_file=reference_file.name
+            reference_file=reference_file.name,
+            source_file_hash=source_file_hash
         )
 
         end_time = datetime.now(timezone.utc)
