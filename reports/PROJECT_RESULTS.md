@@ -88,3 +88,28 @@ Source row numbers and reference version metadata support traceability and audit
 ## 6. Conclusion
 
 The project successfully demonstrates a modular reference data validation pipeline with version-aware validation, data transformation, SQLite persistence, automated tests, retry handling, audit logging, and large-file performance benchmarking.
+## SQL Reconciliation and Database Verification
+
+The SQLite database was verified using the SQL queries available in `docs/RECONCILIATION_QUERIES.sql`.
+
+### Reconciliation Results
+
+| Reference Version | Input Records | Accepted Records | Rejected Records | Difference |
+|---|---:|---:|---:|---:|
+| v1 | 12 | 3 | 9 | 0 |
+| v2 | 12 | 4 | 8 | 0 |
+
+### Database Validation
+
+- Input, accepted, and rejected counts reconciled successfully.
+- No duplicate accepted records were found for the composite key `(event_id, reference_version)`.
+- Accepted records were verified separately for reference versions v1 and v2.
+- Rejected records retained their rejection reasons and source row numbers.
+- Failed pipeline execution details were available in the `pipeline_runs` table.
+- Repeated executions demonstrated idempotent accepted-record loading.
+
+### Observation
+
+Accepted records retain the run ID of the execution that first inserted them. During subsequent idempotent executions, existing accepted records are not inserted again. Pipeline execution counts are maintained separately in `pipeline_runs`.
+
+Rejection audit records are maintained per run, so rejection counts across multiple executions may accumulate.
