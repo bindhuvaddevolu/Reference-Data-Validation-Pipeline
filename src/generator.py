@@ -192,12 +192,26 @@ def generate_sample_data():
 def generate_large_data(record_count):
     random.seed(SEED)
 
-    codes = ["HYD", "BLR", "CHN", "OLD", "FUT", "PNQ", "XYZ"]
+    codes = ["HYD", "BLR", "CHN", "OLD", "FUT", "PNQ"]
 
     start_date = date(2025, 1, 1)
     rows = []
 
-    for i in range(1, record_count + 1):
+    duplicate_count = record_count * 2 // 100
+    missing_count = record_count * 2 // 100
+    invalid_date_count = record_count * 2 // 100
+    unknown_code_count = record_count * 2 // 100
+
+    normal_count = (
+        record_count
+        - duplicate_count
+        - missing_count
+        - invalid_date_count
+        - unknown_code_count
+    )
+
+    # 1. Generate normal records
+    for i in range(1, normal_count + 1):
         event_date = start_date + timedelta(
             days=random.randint(0, 730)
         )
@@ -209,6 +223,46 @@ def generate_large_data(record_count):
             "event_date": event_date.isoformat(),
         })
 
+    # 2. Generate duplicate event IDs
+    for i in range(duplicate_count):
+        donor = rows[i % normal_count]
+
+        rows.append({
+            "event_id": donor["event_id"],
+            "customer_id": f"CUST{random.randint(1, 20000):05d}",
+            "code": random.choice(codes),
+            "event_date": donor["event_date"],
+        })
+
+    # 3. Generate missing required fields
+    for i in range(missing_count):
+        rows.append({
+            "event_id": f"MISSING{i:07d}",
+            "customer_id": "",
+            "code": random.choice(codes),
+            "event_date": "2026-10-20",
+        })
+
+    # 4. Generate invalid dates
+    for i in range(invalid_date_count):
+        rows.append({
+            "event_id": f"INVALID{i:07d}",
+            "customer_id": f"CUST{random.randint(1, 20000):05d}",
+            "code": random.choice(codes),
+            "event_date": "not-a-date",
+        })
+
+    # 5. Generate unknown reference codes
+    for i in range(unknown_code_count):
+        rows.append({
+            "event_id": f"UNKNOWN{i:07d}",
+            "customer_id": f"CUST{random.randint(1, 20000):05d}",
+            "code": "XYZ",
+            "event_date": "2026-10-20",
+        })
+
+    random.shuffle(rows)
+
     write_csv(
         INPUT_DIR / f"large_incoming_{record_count}.csv",
         INCOMING_FIELDS,
@@ -217,8 +271,11 @@ def generate_large_data(record_count):
 
     print(f"Large dataset generated: {record_count} rows")
     print(f"Random seed used: {SEED}")
-
-
+    print(f"Normal records: {normal_count}")
+    print(f"Duplicate records: {duplicate_count}")
+    print(f"Missing-field records: {missing_count}")
+    print(f"Invalid-date records: {invalid_date_count}")
+    print(f"Unknown-code records: {unknown_code_count}")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generate reproducible reference and incoming datasets"

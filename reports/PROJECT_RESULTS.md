@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This report summarizes the validation results, reference version comparison, and performance benchmark of the Reference Data Validation Pipeline.
+This report summarizes the validation results, reference version comparison, performance benchmark, automated testing, and database reconciliation of the Reference Data Validation Pipeline.
 
 ## 2. Reference Version Comparison
 
@@ -21,34 +21,50 @@ Reference v2 introduces the PNQ reference code.
 
 The event associated with PNQ (E007) is accepted using reference v2 but is not accepted using reference v1.
 
-This demonstrates how reference dataset updates can affect validation outcomes.
+This demonstrates how reference dataset updates can affect validation outcomes without modifying the incoming source data.
 
 ## 3. Performance Benchmark
 
-The pipeline was benchmarked using 100,000 incoming records.
+The pipeline was benchmarked using a reproducible synthetic dataset containing 100,000 incoming records.
+
+### Dataset Distribution
+
+| Scenario | Generated Records |
+|---|---:|
+| Normal records | 92,000 |
+| Duplicate records | 2,000 |
+| Missing required fields | 2,000 |
+| Invalid dates | 2,000 |
+| Unknown reference codes | 2,000 |
+| **Total** | **100,000** |
+
+### Benchmark Results
 
 | Metric | Result |
 |---|---:|
 | Total input records | 100,000 |
-| Accepted records | 57,238 |
-| Rejected records | 42,762 |
-| Extraction time | 0.3237 seconds |
-| Validation time | 1.5814 seconds |
-| Transformation time | 0.1158 seconds |
-| Total processing time | 2.0208 seconds |
-| Processing throughput | 49,484.20 records/second |
+| Accepted records | 60,226 |
+| Rejected records | 39,774 |
+| Extraction time | 0.3270 seconds |
+| Validation time | 1.4083 seconds |
+| Transformation time | 0.1100 seconds |
+| Total processing time | 1.8453 seconds |
+| Processing throughput | 54,192.22 records/second |
 
 ### Performance Observation
 
 The validation stage took the largest share of the measured processing time.
 
-The implementation uses efficient Pandas iteration with `itertuples()` to improve validation performance.
+The implementation uses Pandas iteration with `itertuples()` to process incoming records efficiently.
 
-Note: The benchmark measures extraction, validation, and transformation. SQLite loading is not included in the reported processing time.
+The benchmark measures extraction, validation, and transformation. SQLite loading time is not included in the reported processing time.
+
+The dataset generator uses a fixed random seed (42) and supports configurable record counts through the `--size` argument.
 
 ## 4. Automated Testing
 
 The project includes 17 automated tests using Pytest.
+
 Test coverage includes:
 
 - Valid records
@@ -71,24 +87,29 @@ Test coverage includes:
 
 ### Test Result
 
-17 tests passed successfully.
+**17 tests passed successfully.**
+
+Command used:
+
+```bash
+python -m pytest tests/ -v
+```
 
 ## 5. Database and Reliability
 
-The SQLite database maintains:
+The SQLite database maintains three main tables:
 
-- Accepted records
-- Rejected records
-- Pipeline execution history
+- `accepted_records` – stores validated and transformed records.
+- `rejected_records` – stores rejected records with rejection reasons and source traceability.
+- `pipeline_runs` – maintains pipeline execution history, status, and record counts.
 
-The pipeline uses idempotent loading for accepted records and maintains rejection history by pipeline run.
+The pipeline uses idempotent loading for accepted records through a composite primary key `(event_id, reference_version)`.
 
-Source row numbers and reference version metadata support traceability and auditability.
+Rejected records are maintained per pipeline run, allowing rejection history to be audited across executions.
 
-## 6. Conclusion
+Source row numbers, source file details, run IDs, and reference version metadata support traceability and auditability.
 
-The project successfully demonstrates a modular reference data validation pipeline with version-aware validation, data transformation, SQLite persistence, automated tests, retry handling, audit logging, and large-file performance benchmarking.
-## SQL Reconciliation and Database Verification
+## 6. SQL Reconciliation and Database Verification
 
 The SQLite database was verified using the SQL queries available in `docs/RECONCILIATION_QUERIES.sql`.
 
@@ -110,6 +131,16 @@ The SQLite database was verified using the SQL queries available in `docs/RECONC
 
 ### Observation
 
-Accepted records retain the run ID of the execution that first inserted them. During subsequent idempotent executions, existing accepted records are not inserted again. Pipeline execution counts are maintained separately in `pipeline_runs`.
+Accepted records retain the run ID of the execution that first inserted them. During subsequent idempotent executions, existing accepted records are not inserted again.
+
+Pipeline execution counts are maintained separately in `pipeline_runs`.
 
 Rejection audit records are maintained per run, so rejection counts across multiple executions may accumulate.
+
+## 7. Conclusion
+
+The project demonstrates a modular reference data validation pipeline with:
+
+- Version-aware reference data validation.
+- Schema and business rule validation.
+- Accepted
