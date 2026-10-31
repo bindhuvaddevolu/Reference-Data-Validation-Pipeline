@@ -21,7 +21,7 @@ It also provides audit logging, retry handling, record-level traceability, autom
 - Data transformation and enrichment.
 - Accepted and rejected record separation.
 - SQLite database integration.
-- Idempotent data loading to prevent duplicate accepted records.
+- Idempotent data loading to prevent duplicate accepted and rejected records.
 - Retry handling and failure auditing.
 - Source row-level traceability.
 - Pipeline execution logging and metrics.
@@ -82,7 +82,8 @@ Reference-Data-Validation-Pipeline/
 │   └── RECONCILIATION_QUERIES.sql
 │
 ├── prompts/
-│   └── AI_USAGE.md
+│   ├── AI_USAGE.md
+│   └── prompt_history.md
 │
 ├── reports/
 │   ├── PROJECT_RESULTS.md
@@ -283,6 +284,7 @@ python -m src.benchmark
 | Throughput | 54,192.22 records/second |
 
 **Note:** Benchmark timing covers extraction, validation, and transformation. SQLite loading time is not included in this measurement.
+Note: Benchmark timings may vary depending on hardware and system conditions.
 
 The validation stage accounts for the largest share of measured processing time.
 
@@ -322,6 +324,8 @@ The pipeline supports repeatable execution through synthetic data generation and
 - Rejected records are maintained with run-level audit information.
 - Failed executions are recorded for troubleshooting.
 - The generator uses a fixed random seed for reproducibility.
+- Rejected records are deduplicated using source file hash, source row number, and reference version.
+- Every pipeline execution is recorded separately, including reruns.
 
 ## 13. Documentation and Reports
 
