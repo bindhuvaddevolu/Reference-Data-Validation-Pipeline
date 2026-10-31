@@ -48,8 +48,7 @@ Note: The benchmark measures extraction, validation, and transformation. SQLite 
 
 ## 4. Automated Testing
 
-The project includes 14 automated tests using Pytest.
-
+The project includes 17 automated tests using Pytest.
 Test coverage includes:
 
 - Valid records
@@ -66,10 +65,13 @@ Test coverage includes:
 - Source row number traceability
 - Retry behavior
 - Reference version audit metadata
+- Missing source column detection
+- Unexpected source column detection
+- Malformed CSV detection
 
 ### Test Result
 
-14 tests passed successfully.
+17 tests passed successfully.
 
 ## 5. Database and Reliability
 

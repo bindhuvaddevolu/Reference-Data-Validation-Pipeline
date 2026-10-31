@@ -1,6 +1,6 @@
 
 import sqlite3
-
+from src.extract import read_csv_with_schema, SOURCE_COLUMNS
 import pandas as pd
 import pytest
 
@@ -414,3 +414,46 @@ def test_reference_version_audit(reference_df, tmp_path):
         1,
         0
     )
+    # TEST 15: Missing column should raise schema mismatch error
+def test_missing_source_column(tmp_path):
+
+    csv_file = tmp_path / "missing_column.csv"
+
+    csv_file.write_text(
+        "event_id,code,event_date\n"
+        "E101,HYD,2026-10-20\n",
+        encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="Schema mismatch"):
+        read_csv_with_schema(csv_file, SOURCE_COLUMNS)
+
+
+# TEST 16: Unexpected column should raise schema mismatch error
+def test_unexpected_source_column(tmp_path):
+
+    csv_file = tmp_path / "unexpected_column.csv"
+
+    csv_file.write_text(
+        "event_id,customer_id,code,event_date,extra_column\n"
+        "E102,C102,HYD,2026-10-20,unexpected\n",
+        encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="Schema mismatch"):
+        read_csv_with_schema(csv_file, SOURCE_COLUMNS)
+
+
+# TEST 17: Malformed CSV should raise parser error
+def test_malformed_csv(tmp_path):
+
+    csv_file = tmp_path / "malformed.csv"
+
+    csv_file.write_text(
+        'event_id,customer_id,code,event_date\n'
+        'E103,C103,HYD,"2026-10-20\n',
+        encoding="utf-8"
+    )
+
+    with pytest.raises(pd.errors.ParserError):
+        read_csv_with_schema(csv_file, SOURCE_COLUMNS)

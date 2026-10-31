@@ -1,0 +1,5 @@
+source_row_number,event_id,customer_id,code,description,event_date,reference_status,reference_version,event_year,event_month,validation_warning
+1,E001,C001,HYD,Hyderabad,2026-10-20,ACTIVE,v2,2026,10,
+2,E002,C002,BLR,Bengaluru,2026-10-21,ACTIVE,v2,2026,10,
+4,E004,C004,OLD,Old Region,2024-06-15,DEPRECATED,v2,2024,6,HISTORICAL_DEPRECATED_CODE
+7,E007,C007,PNQ,Pune,2026-10-24,ACTIVE,v2,2026,10,
