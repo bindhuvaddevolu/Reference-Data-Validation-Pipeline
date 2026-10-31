@@ -77,7 +77,9 @@ Reference-Data-Validation-Pipeline/
 │   └── test_pipeline.py
 │
 ├── docs/
-│   └── DATA_DICTIONARY.md
+│   ├── DATA_DICTIONARY.md
+│   ├── DESIGN_DECISIONS.md
+│   └── RECONCILIATION_QUERIES.sql
 │
 ├── prompts/
 │   └── AI_USAGE.md
@@ -164,13 +166,21 @@ This demonstrates how reference-data updates can change validation outcomes with
 
 ```bash
 git clone https://github.com/bindhuvaddevolu/Reference-Data-Validation-Pipeline.git
+
 cd Reference-Data-Validation-Pipeline
 ```
 
 ### Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+```
+
+The project dependencies are:
+
+```text
+pandas==2.3.2
+pytest==9.1.1
 ```
 
 ## 8. Run the Pipeline
@@ -197,7 +207,7 @@ Execute the test suite:
 python -m pytest tests/ -v
 ```
 
-The project currently includes **17 automated tests** covering:
+The project currently includes **18 automated tests** covering:
 
 - Valid records.
 - Empty input.
@@ -216,31 +226,65 @@ The project currently includes **17 automated tests** covering:
 - Missing source columns.
 - Unexpected source columns.
 - Malformed CSV files.
+- Out-of-order event dates.
 
-Latest verified test result: **17 passed**.
+### Latest Test Result
+
+**18 tests passed successfully.**
+
+Latest verified execution:
+
+```text
+18 passed in 2.95s
+```
 
 ## 10. Performance Benchmark
 
-Run the benchmark:
+The project supports generating and benchmarking larger synthetic datasets.
+
+### Generate Synthetic Data
+
+Generate the default 100,000-record dataset:
+
+```bash
+python -m src.generator --size 100000
+```
+
+The generator uses a fixed random seed (42) to support reproducibility.
+
+### Run the Benchmark
 
 ```bash
 python -m src.benchmark
 ```
+
+### Latest Dataset Distribution
+
+| Scenario | Generated Records |
+|---|---:|
+| Normal records | 92,000 |
+| Duplicate records | 2,000 |
+| Missing required fields | 2,000 |
+| Invalid dates | 2,000 |
+| Unknown reference codes | 2,000 |
+| **Total** | **100,000** |
 
 ### Latest Benchmark Results
 
 | Metric | Result |
 |---|---:|
 | Input records | 100,000 |
-| Accepted records | 57,238 |
-| Rejected records | 42,762 |
-| Extraction time | 0.3237 seconds |
-| Validation time | 1.5814 seconds |
-| Transformation time | 0.1158 seconds |
-| Total processing time | 2.0208 seconds |
-| Throughput | 49,484 records/second |
+| Accepted records | 60,226 |
+| Rejected records | 39,774 |
+| Extraction time | 0.3270 seconds |
+| Validation time | 1.4083 seconds |
+| Transformation time | 0.1100 seconds |
+| Total processing time | 1.8453 seconds |
+| Throughput | 54,192.22 records/second |
 
-**Note:** Benchmark timing covers extraction, validation, and transformation. SQLite loading is not included in this measurement.
+**Note:** Benchmark timing covers extraction, validation, and transformation. SQLite loading time is not included in this measurement.
+
+The validation stage accounts for the largest share of measured processing time.
 
 ## 11. Database and Audit
 
@@ -277,12 +321,15 @@ The pipeline supports repeatable execution through synthetic data generation and
 - Duplicate accepted records are prevented during repeated loads.
 - Rejected records are maintained with run-level audit information.
 - Failed executions are recorded for troubleshooting.
+- The generator uses a fixed random seed for reproducibility.
 
 ## 13. Documentation and Reports
 
 Additional project documentation is available in the following files:
 
 - [Data Dictionary](docs/DATA_DICTIONARY.md) – Describes source data, reference data, target tables, fields, and business rules.
+- [Design Decisions](docs/DESIGN_DECISIONS.md) – Explains technology choices, architecture, implementation decisions, and trade-offs.
+- [Reconciliation Queries](docs/RECONCILIATION_QUERIES.sql) – Contains SQL queries for validating database consistency and record traceability.
 - [Project Results](reports/PROJECT_RESULTS.md) – Contains validation results, reference comparison, and performance measurements.
 - [Sample Transformed Output](reports/sample_transformed_output.csv) – Shows representative accepted and transformed records.
 - [AI Usage Disclosure](prompts/AI_USAGE.md) – Describes the use of AI assistance during project development.
