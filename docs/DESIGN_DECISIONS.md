@@ -42,9 +42,15 @@ This document explains the key technical decisions made while developing the Ref
 
 **Decision:** Use a composite primary key `(event_id, reference_version)` for accepted records and `INSERT OR IGNORE` during loading.
 
-**Reason:** Repeated processing of the same event under the same reference version should not create unintended duplicate accepted records.
+For rejected records, use a unique combination of `source_file_hash`, `source_row_number`, and `reference_version` to prevent duplicate rejection entries during repeated processing.
 
-**Trade-off:** Rejected records are maintained with run-level audit information, so repeated failed runs can create separate rejection audit entries.
+**Reason:** Reprocessing the same source file against the same reference version should not create unintended duplicate accepted or rejected records.
+
+The source file hash helps identify the input file, while the source row number identifies the specific rejected record.
+
+Every pipeline execution is recorded separately in the `pipeline_runs` table, including repeated executions. A rejected record retains the run ID of the execution that first inserted it.
+
+**Trade-off:** Rejected records are deduplicated across repeated executions for the same source file and reference version. Therefore, individual reruns are tracked in `pipeline_runs` rather than creating duplicate rejected-record entries.
 
 ## 7. Audit and Traceability
 

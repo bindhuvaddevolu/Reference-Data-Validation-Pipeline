@@ -11,6 +11,7 @@ All final implementation decisions and project verification remain the developer
 ## 2. AI Tools Used
 
 ### ChatGPT
+
 Used as the primary AI assistant for:
 - Understanding the pipeline requirements.
 - Python and Pandas implementation guidance.
@@ -20,6 +21,7 @@ Used as the primary AI assistant for:
 - README and technical documentation improvements.
 
 ### Claude AI
+
 Used occasionally as a secondary assistant for additional technical suggestions and alternative implementation approaches.
 
 Specific Claude prompts and suggestions should be included in the separate prompt history where available.
@@ -62,7 +64,7 @@ Examples of work performed:
 2. Updated the synthetic data generator to use a fixed random seed and generate different data-quality scenarios.
 3. Reviewed duplicate event ID handling and validation outcomes.
 4. Executed the pipeline with reference versions v1 and v2 and checked accepted and rejected record counts.
-5. Re-executed the v2 pipeline to verify that accepted records were not inserted again.
+5. Re-executed both v1 and v2 pipeline runs to verify that accepted and rejected records were not inserted again for the same source file and reference version.
 6. Ran the automated test suite and verified that all 18 tests passed.
 7. Checked the 100,000-record dataset generation and benchmark results.
 8. Reviewed SQLite reconciliation results and GitHub synchronization.

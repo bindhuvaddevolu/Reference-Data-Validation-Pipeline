@@ -61,6 +61,8 @@ The benchmark measures extraction, validation, and transformation. SQLite loadin
 
 The dataset generator uses a fixed random seed (42) and supports configurable record counts through the `--size` argument.
 
+Benchmark timings may vary depending on hardware and system conditions.
+
 ## 4. Automated Testing
 
 The project includes **18 automated tests** using Pytest.
@@ -104,11 +106,31 @@ The SQLite database maintains three main tables:
 - `rejected_records` – stores rejected records with rejection reasons and source traceability.
 - `pipeline_runs` – maintains pipeline execution history, status, and record counts.
 
-The pipeline uses idempotent loading for accepted records through a composite primary key `(event_id, reference_version)`.
+### Accepted Record Idempotency
 
-Rejected records are maintained per pipeline run, allowing rejection history to be audited across executions.
+The pipeline uses a composite primary key `(event_id, reference_version)` for accepted records.
 
-Source row numbers, source file details, run IDs, and reference version metadata support traceability and auditability.
+This prevents duplicate accepted records when the same event is processed repeatedly using the same reference version.
+
+### Rejected Record Idempotency
+
+Rejected records are deduplicated using a combination of:
+
+- Source file SHA-256 hash.
+- Source row number.
+- Reference version.
+
+This prevents duplicate rejected-record entries when the same source file is processed again using the same reference version.
+
+### Execution Auditing
+
+Every pipeline execution receives a unique run ID and is recorded separately in the `pipeline_runs` table, including repeated executions.
+
+Accepted and rejected records retain the run ID of the execution that first inserted them.
+
+This approach maintains record-level traceability while keeping individual pipeline execution history available for auditing.
+
+Source file details, source row numbers, rejection reasons, run IDs, and reference version metadata support troubleshooting and traceability.
 
 ## 6. SQL Reconciliation and Database Verification
 
@@ -127,9 +149,20 @@ The SQLite database was verified using the SQL queries available in `docs/RECONC
 - No duplicate accepted records were found for the composite key `(event_id, reference_version)`.
 - Accepted records were verified separately for reference versions v1 and v2.
 - Rejected records retained their rejection reasons and source row numbers.
-- Failed pipeline execution details were available in the `pipeline_runs` table.
-- Repeated executions demonstrated idempotent accepted-record loading.
+- Rejected-record idempotency was verified using source file hash, source row number, and reference version.
+- Pipeline execution details were recorded separately in the `pipeline_runs` table.
+- Repeated executions did not create unintended duplicate accepted or rejected records.
 
 ### Observation
 
-Accepted records retain the run ID of the execution that first inserted
+The pipeline successfully processed both reference versions and maintained consistent validation results across repeated executions.
+
+The reconciliation results confirm that the number of input records matches the combined accepted and rejected records for each reference version.
+
+## 7. Conclusion
+
+The Reference Data Validation Pipeline successfully demonstrates a modular data engineering workflow covering data extraction, schema validation, business rule validation, transformation, and database loading.
+
+The implementation supports versioned reference data, record-level traceability, audit logging, automated testing, reproducible data generation, and idempotent processing.
+
+The successful v1 and v2 executions, repeated-run verification, and automated test results demonstrate the reliability and reproducibility of the implemented solution.
